@@ -2,8 +2,8 @@ FROM maven:3.5-jdk-8-alpine as builder
 
 # Copy local code to the container image.
 WORKDIR /app
-COPY ../../../../code/user_centor/user_centor/pom.xml .
-COPY ../../../../code/user_centor/user_centor/src ./src
+COPY ../../../../code/user_centor/pom.xml .
+COPY ../../../../code/user_centor/src ./src
 
 # Build a release artifact.
 RUN mvn package -DskipTests
