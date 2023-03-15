@@ -4,7 +4,7 @@ FROM maven:3.5-jdk-8-alpine as builder
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-COPY target/user_centor-0.0.1-SNAPSHOT.jar .
+COPY user_centor-0.0.1-SNAPSHOT.jar .
 # Build a release artifact.
 #RUN mvn package -DskipTests
 
