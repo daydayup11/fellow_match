@@ -1,12 +1,10 @@
 package org.mumu.user_centor.model;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 
@@ -18,7 +16,7 @@ public class User implements Serializable {
     /**
      * 
      */
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -60,10 +58,7 @@ public class User implements Serializable {
      * 
      */
     private Integer userStatus;
-    /**
-     *
-     */
-    private Integer userRole;
+
     /**
      * 
      */
@@ -79,6 +74,16 @@ public class User implements Serializable {
      */
     @TableLogic
     private Integer isDelete;
+
+    /**
+     * 0-普通用户，1-管理员
+     */
+    private Integer userRole;
+
+    /**
+     * 
+     */
+    private String tags;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
@@ -106,7 +111,9 @@ public class User implements Serializable {
             && (this.getUserStatus() == null ? other.getUserStatus() == null : this.getUserStatus().equals(other.getUserStatus()))
             && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()))
             && (this.getUpdateTime() == null ? other.getUpdateTime() == null : this.getUpdateTime().equals(other.getUpdateTime()))
-            && (this.getIsDelete() == null ? other.getIsDelete() == null : this.getIsDelete().equals(other.getIsDelete()));
+            && (this.getIsDelete() == null ? other.getIsDelete() == null : this.getIsDelete().equals(other.getIsDelete()))
+            && (this.getUserRole() == null ? other.getUserRole() == null : this.getUserRole().equals(other.getUserRole()))
+            && (this.getTags() == null ? other.getTags() == null : this.getTags().equals(other.getTags()));
     }
 
     @Override
@@ -125,6 +132,8 @@ public class User implements Serializable {
         result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
         result = prime * result + ((getUpdateTime() == null) ? 0 : getUpdateTime().hashCode());
         result = prime * result + ((getIsDelete() == null) ? 0 : getIsDelete().hashCode());
+        result = prime * result + ((getUserRole() == null) ? 0 : getUserRole().hashCode());
+        result = prime * result + ((getTags() == null) ? 0 : getTags().hashCode());
         return result;
     }
 
@@ -146,6 +155,8 @@ public class User implements Serializable {
         sb.append(", createTime=").append(createTime);
         sb.append(", updateTime=").append(updateTime);
         sb.append(", isDelete=").append(isDelete);
+        sb.append(", userRole=").append(userRole);
+        sb.append(", tags=").append(tags);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

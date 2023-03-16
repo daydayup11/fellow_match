@@ -1,13 +1,13 @@
 package org.mumu.user_centor.mapper;
 
-import org.mumu.user_centor.model.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.mumu.user_centor.model.User;
 
 /**
 * @author HP
 * @description 针对表【user】的数据库操作Mapper
-* @createDate 2023-01-18 22:40:58
-* @Entity org.mumu.user_centor.model.User
+* @createDate 2023-03-16 19:23:52
+* @Entity generator.domain.User
 */
 public interface UserMapper extends BaseMapper<User> {
 

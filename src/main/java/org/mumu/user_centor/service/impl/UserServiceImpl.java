@@ -2,6 +2,8 @@ package org.mumu.user_centor.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mumu.user_centor.common.ErrorCode;
@@ -11,22 +13,27 @@ import org.mumu.user_centor.mapper.UserMapper;
 import org.mumu.user_centor.service.UserService;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
 * @author HP
 * @description 针对表【user】的数据库操作Service实现
-* @createDate 2023-01-18 22:40:59
+* @createDate 2023-03-16 19:23:52
 */
 @Service
 @Slf4j
-public class UserServiceImpl extends ServiceImpl<UserMapper, User>
-    implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     public static final String SALT = "mumu";
     public static final String USER_LOGIN_STATE = "userLoginState";
     @Resource
@@ -61,11 +68,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //密码一致
         if(!userPassword.equals(checkPassword)){
-           throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码不一致");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码不一致");
         }
         //账户不能重复，因为涉及到查询数据库，所以放在后面避免浪费资源
         //构建一个查询的wrapper
-        QueryWrapper<User> queryWrapper = new QueryWrapper();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount",userAccount);
         int count = this.count(queryWrapper);
         if(count>0){
@@ -104,7 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //查询数据库
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-        QueryWrapper queryWrapper = new QueryWrapper();
+        QueryWrapper<User> queryWrapper = new QueryWrapper();
         queryWrapper.eq("userAccount",userAccount);
         queryWrapper.eq("userPassword",encryptPassword);
         User user = userMapper.selectOne(queryWrapper);
@@ -144,8 +151,60 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return 1;
     }
 
-}
+    /**
+     * 根据标签搜索用户（使用内存过滤）
+     * @param tagNameList 标签列表
+     * @return 目标用户
+     */
+    @Override
+    public List<User> searchUsersByTags(List<String> tagNameList) {
+        //遇事先判空
+        if (CollectionUtils.isEmpty(tagNameList)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //1.先查询所有的用户
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        List<User> userList = userMapper.selectList(queryWrapper);
+        Gson gson = new Gson();
+        //2.在内存中判断是否包含要求的标签
+        return userList.stream().filter(user ->{
+            String tagStr = user.getTags();
+            //json解析为对象，不能直接.class获得类型，需要借助TypeToken
+            Set<String> tempTagNameSet = gson.fromJson(tagStr, new TypeToken<Set<String>>() {
+            }.getType());
+            //相当于if else，判空
+            tempTagNameSet = Optional.ofNullable(tempTagNameSet).orElse(new HashSet<>());
+            for(String tagName : tagNameList){
+                //当前用户所有标签是否包含查询的
+                if(!tempTagNameSet.contains(tagName)){
+                    return false;
+                }
+            }
+            return true;
+        }).map(this::getSafetyUser).collect(Collectors.toList());
+    }
 
+    /**
+     * 标签查询sql版
+     * @param tagNameList
+     * @return
+     */
+    public List<User> searchUserByTagsBySQL(List<String> tagNameList){
+        //遇事先判空
+        if(CollectionUtils.isEmpty(tagNameList)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        // 拼接 and 查询
+        // like '%Java%' and like '%Python%'
+        for(String tagName : tagNameList){
+            queryWrapper = queryWrapper.like("tags",tagName);
+        }
+        List<User> userList = userMapper.selectList(queryWrapper);
+        return userList.stream().map(this::getSafetyUser).collect(Collectors.toList());
+    }
+
+}
 
 
 

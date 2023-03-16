@@ -81,6 +81,7 @@ public class UserController {
         List<User> users =  userService.list(queryWrapper);
         return ResultUtils.success(users);
     }
+
     @GetMapping("/current")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request){
         Object o = request.getSession().getAttribute(UserServiceImpl.USER_LOGIN_STATE);
@@ -136,6 +137,7 @@ public class UserController {
         }
 
     }
+
 
 
 }
