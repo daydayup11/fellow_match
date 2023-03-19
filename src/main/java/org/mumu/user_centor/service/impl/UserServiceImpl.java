@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mumu.user_centor.common.ErrorCode;
+import org.mumu.user_centor.constant.UserConstant;
 import org.mumu.user_centor.exception.BusinessException;
 import org.mumu.user_centor.model.User;
 import org.mumu.user_centor.mapper.UserMapper;
@@ -25,6 +26,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.mumu.user_centor.constant.UserConstant.ADMIN_ROLE;
 
 /**
 * @author HP
@@ -182,6 +185,52 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             return true;
         }).map(this::getSafetyUser).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isAdmin(HttpServletRequest request) {
+        User user = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (user == null || user.getUserRole() != ADMIN_ROLE) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isAdmin(User loginUser) {
+        return loginUser.getUserRole() == ADMIN_ROLE;
+    }
+
+    @Override
+    public User getCurrentUser(HttpServletRequest request) {
+        if (request == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
+        return user;
+    }
+
+    @Override
+    public int updateUser(User user, User loginUser) {
+        Long userId = user.getId();
+        if (userId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 2. 校验权限
+        // 2.1 管理员可以更新任意信息
+        // 2.2 用户只能更新自己的信息
+        if (!isAdmin(loginUser) && userId != loginUser.getId()) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        User oldUser = this.getById(user.getId());
+        if (oldUser == null) {
+            throw new BusinessException(ErrorCode.PARAMS_NULL_ERROR);
+        }
+        // 3. 触发更新
+        return this.baseMapper.updateById(user);
     }
 
     /**
