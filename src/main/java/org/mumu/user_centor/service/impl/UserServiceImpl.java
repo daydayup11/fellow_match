@@ -95,19 +95,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         //校验是否为空
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码为空");
         }
         if(userAccount.length()<4){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"长度小于4");
         }
         if(userPassword.length()<8){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"长度小于8");
         }
         //账户不能包含特殊字符，这里的正则表达式可以上网搜
-        String  validPattern  =  "[^a-zA-Z0-9]";
+        String  validPattern  =  "[a-zA-Z0-9]{1,16}";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if(!matcher.find()){
-            return null;
+        if(!matcher.matches()){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"包含特殊字符");
         }
         //查询数据库
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -118,7 +118,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //密码不一致
         if(user == null){
             log.info("user login failed,userAccount can not match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码错误");
         }
         User safeUser = getSafetyUser(user);
         request.getSession().setAttribute(USER_LOGIN_STATE,safeUser);

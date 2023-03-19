@@ -12,6 +12,7 @@ import org.mumu.user_centor.model.request.UserRegisterRequest;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,12 +53,12 @@ public class UserController {
     @PostMapping("/login")
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request){
         if( userLoginRequest == null){
-            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数为空");
         }
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount,userPassword)){
-            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User user = userService.userLogin(userAccount, userPassword,request);
         return ResultUtils.success(user);
@@ -136,6 +137,15 @@ public class UserController {
             return true;
         }
 
+    }
+
+    @GetMapping("/searchUserByTags")
+    public BaseResponse<List<User>> searchByTags(@RequestParam(required = false) List<String> tagList){
+       if (CollectionUtils.isEmpty(tagList)){
+           throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
+       }
+        List<User> userList = userService.searchUsersByTags(tagList);
+        return ResultUtils.success(userList);
     }
 
 
