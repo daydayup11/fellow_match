@@ -13,7 +13,7 @@ spring:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
   redis:
-    host: 192.168.159.132
+    host: 192.168.159.133
     port: 6379
     password: 123456
 mybatis-plus:

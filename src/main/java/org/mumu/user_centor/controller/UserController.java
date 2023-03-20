@@ -1,6 +1,7 @@
 package org.mumu.user_centor.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.commons.lang3.StringUtils;
 import org.mumu.user_centor.common.BaseResponse;
 import org.mumu.user_centor.common.ErrorCode;
@@ -12,6 +13,7 @@ import org.mumu.user_centor.model.request.UserRegisterRequest;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -139,13 +141,27 @@ public class UserController {
 
     }
 
-    @GetMapping("/searchUserByTags")
+    @GetMapping("/search/tags")
     public BaseResponse<List<User>> searchByTags(@RequestParam(required = false) List<String> tagList){
        if (CollectionUtils.isEmpty(tagList)){
            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
        }
         List<User> userList = userService.searchUsersByTags(tagList);
         return ResultUtils.success(userList);
+    }
+
+    /**
+     * 主页用户推荐
+     * @param request
+     * @param pageSize
+     * @param pageNum
+     * @return
+     */
+    @GetMapping("/recommend")
+    public BaseResponse<Page<User>> recommendUsers(HttpServletRequest request,long pageSize,long pageNum){
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        Page<User> users = userService.page(new Page<>(pageNum,pageSize),queryWrapper);
+        return ResultUtils.success(users);
     }
 
 
