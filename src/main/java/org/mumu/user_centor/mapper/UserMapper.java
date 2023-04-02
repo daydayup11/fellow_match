@@ -1,7 +1,7 @@
 package org.mumu.user_centor.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.mumu.user_centor.model.User;
+import org.mumu.user_centor.model.domain.User;
 
 /**
 * @author HP

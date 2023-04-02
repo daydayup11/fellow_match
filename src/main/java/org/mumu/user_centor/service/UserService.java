@@ -1,7 +1,8 @@
 package org.mumu.user_centor.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.mumu.user_centor.model.User;
+import org.mumu.user_centor.model.domain.User;
+
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;

@@ -1,10 +1,13 @@
 spring:
     datasource:
-        driver-class-name: com.mysql.jdbc.Driver
+        driver-class-name: com.mysql.cj.jdbc.Driver
         url: jdbc:mysql://47.115.226.171:3306/universe
         username: root
-        password: 123
+        password: 123456
     session:
         timeout: 86400
+    redis:
+        host: 47.115.226.171
+        port: 6379
 server:
     address: 0.0.0.0

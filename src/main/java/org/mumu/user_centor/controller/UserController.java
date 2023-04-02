@@ -2,31 +2,42 @@ package org.mumu.user_centor.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mumu.user_centor.common.BaseResponse;
 import org.mumu.user_centor.common.ErrorCode;
 import org.mumu.user_centor.common.ResultUtils;
+import org.mumu.user_centor.constant.RedisConstant;
 import org.mumu.user_centor.exception.BusinessException;
-import org.mumu.user_centor.model.User;
+import org.mumu.user_centor.model.domain.User;
+import org.mumu.user_centor.model.dto.UserQuery;
 import org.mumu.user_centor.model.request.UserLoginRequest;
 import org.mumu.user_centor.model.request.UserRegisterRequest;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://47.115.226.171"},allowCredentials = "true")
+@CrossOrigin(origins = {"http://10.169.24.197:3000"},allowCredentials = "true")
+@Slf4j
 public class UserController {
     @Autowired
     UserService userService;
 
+    @Resource
+    private RedisTemplate redisTemplate;
     /**
      * 用户注册
      * @param userRegisterRequest 注册请求体
@@ -71,7 +82,7 @@ public class UserController {
      * @param username 用户名
      * @return 查询结果
      */
-    @GetMapping("/search")
+    @GetMapping("/searchPage")
     public BaseResponse<List<User>> userSearch(HttpServletRequest request,String username){
         if(!isAdmin(request)){
             throw new BusinessException(ErrorCode.NO_AUTH);
@@ -159,11 +170,44 @@ public class UserController {
      */
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(HttpServletRequest request,long pageSize,long pageNum){
+//        User currentUser = userService.getCurrentUser(request);
+//        String redisKey = RedisConstant.RECOMMEND + currentUser.getId();
+        String redisKey = RedisConstant.RECOMMEND + "1635322279466274817";
+        ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
+        //如果有缓存，直接读缓存
+        //stringTemplate序列化为json得有无参构造，得自己创建page对象
+        Page<User> userPage= (Page<User>)valueOperations.get(redisKey);
+        if (userPage!=null){
+            return ResultUtils.success(userPage);
+        }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        Page<User> users = userService.page(new Page<>(pageNum,pageSize),queryWrapper);
-        return ResultUtils.success(users);
+        userPage = userService.page(new Page<>(pageNum,pageSize),queryWrapper);
+        //写缓存
+        try {
+            valueOperations.set(redisKey,userPage,300000L, TimeUnit.MILLISECONDS);
+        }catch (Exception e){
+            log.error("redis set key error",e);
+        }
+        return ResultUtils.success(userPage);
     }
 
-
+//    @PostMapping("/searchPage")
+//    public BaseResponse<Page<User>> searchUsersPage(@RequestBody UserQuery userQuery) {
+//        String searchText = userQuery.getSearchText();
+//        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+//        if (StringUtils.isNotBlank(searchText)) {
+//            queryWrapper.like("username", searchText)
+//                    .or().like("profile", searchText)
+//                    .or().like("tags", searchText);
+//        }
+//        Page<User> page = new Page<>(userQuery.getPageNum(), userQuery.getPageSize());
+//        Page<User> userListPage = userService.page(page, queryWrapper);
+//        List<User> userList = userListPage.getRecords();
+//        List<User> safetyUserList = userList.stream()
+//                .map(user -> userService.getSafetyUser(user))
+//                .collect(Collectors.toList());
+//        userListPage.setRecords(safetyUserList);
+//        return ResultUtils.success(userListPage);
+//    }
 
 }

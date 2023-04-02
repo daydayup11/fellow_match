@@ -9,10 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.mumu.user_centor.common.ErrorCode;
 import org.mumu.user_centor.constant.UserConstant;
 import org.mumu.user_centor.exception.BusinessException;
-import org.mumu.user_centor.model.User;
+import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.mapper.UserMapper;
 import org.mumu.user_centor.service.UserService;
-import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -52,8 +51,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public long userRegister(String userAccount, String userPassword,String checkPassword) {
         //校验是否为空
         if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
-
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或者密码为空");
         }
         if(userAccount.length()<4){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账号过短");

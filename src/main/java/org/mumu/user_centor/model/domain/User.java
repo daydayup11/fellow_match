@@ -1,4 +1,4 @@
-package org.mumu.user_centor.model;
+package org.mumu.user_centor.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
