@@ -23,6 +23,10 @@ public class Team implements Serializable {
      * 队伍名称
      */
     private String name;
+    /**
+     * 队伍名称
+     */
+    private String place;
 
     /**
      * 描述
@@ -37,6 +41,10 @@ public class Team implements Serializable {
      * 队伍标签
      */
     private String tags;
+    /**
+     * 队伍公告
+     */
+    private String announce;
     /**
      * 最大人数
      */

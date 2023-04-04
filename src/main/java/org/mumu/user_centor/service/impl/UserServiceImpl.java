@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mumu.user_centor.common.ErrorCode;
@@ -12,16 +13,17 @@ import org.mumu.user_centor.exception.BusinessException;
 import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.mapper.UserMapper;
 import org.mumu.user_centor.service.UserService;
+import org.mumu.user_centor.utils.JaccardSimilarity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -93,7 +95,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response) {
         //校验是否为空
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码为空");
@@ -122,7 +124,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码错误");
         }
         User safeUser = getSafetyUser(user);
-        request.getSession().setAttribute(USER_LOGIN_STATE,safeUser);
+        HttpSession session = request.getSession();
+        session.setAttribute(USER_LOGIN_STATE,safeUser);
+//        response.addCookie(new Cookie("JSESSIONID", session.getId()));
         return safeUser;
     }
 
@@ -138,8 +142,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safeUser.setUserAccount(user.getUserAccount());
         safeUser.setAvatarUrl(user.getAvatarUrl());
         safeUser.setGender(user.getGender());
+        safeUser.setProfile(user.getProfile());
         safeUser.setPhone(user.getPhone());
         safeUser.setEmail(user.getEmail());
+        safeUser.setTags(user.getTags());
         safeUser.setUserRole(user.getUserRole());
         safeUser.setUserStatus(user.getUserStatus());
         safeUser.setCreateTime(user.getCreateTime());
@@ -204,7 +210,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (request == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        HttpSession session = request.getSession();
+
+        User user = (User) session.getAttribute(USER_LOGIN_STATE);
         if (user == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
@@ -229,6 +237,67 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 3. 触发更新
         return this.baseMapper.updateById(user);
+    }
+
+    @Override
+    public List<User> matchUsers(long num, User loginUser) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "tags");
+        queryWrapper.isNotNull("tags");
+        queryWrapper.ne("tags", "[]");
+        //查出所有的用户
+        List<User> userList = this.list(queryWrapper);
+        //获得当前用户的标签
+        String tags = loginUser.getTags();
+        //将用户标签解析为一个个字符串
+        Gson gson = new Gson();
+        List<String> tagList = gson.fromJson(tags, new TypeToken<List<String>>() {
+        }.getType());
+        //如果当前用户没有设置标签，就返回空
+        if(CollectionUtils.isEmpty(tagList)){
+            return new ArrayList<>();
+        }
+        Set<String> currentUserTags = new HashSet<>(tagList);
+        // 用户列表的下标 => 相似度
+        List<Pair<User, Double>> list = new ArrayList<>();
+        // 依次计算所有用户和当前用户的相似度
+        for (int i = 0; i < userList.size(); i++) {
+            User user = userList.get(i);
+            String userTags = user.getTags();
+            // 无标签或者为当前用户自己
+//            System.out.println(user.getId().equals(loginUser.getId()));
+            if (StringUtils.isBlank(userTags) || user.getId().equals(loginUser.getId())) {
+                continue;
+            }
+            List<String> tagsList = gson.fromJson(userTags, new TypeToken<List<String>>() {
+            }.getType());
+            Set<String> userTagSet = new HashSet<>(tagsList);
+            // 计算分数
+            double distance = JaccardSimilarity.matchUser(userTagSet, currentUserTags);
+            list.add(new Pair<>(user, distance));
+        }
+        // 按相似度由大到小排序
+        List<Pair<User, Double>> topUserPairList = list.stream()
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .limit(num)
+                .collect(Collectors.toList());
+        // 原本顺序的 userId 列表
+        List<Long> userIdList = topUserPairList.stream().map(pair -> pair.getKey().getId()).collect(Collectors.toList());
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        userQueryWrapper.in("id", userIdList);
+        // 1, 3, 2
+        // User1、User2、User3
+        // 1 => User1, 2 => User2, 3 => User3
+        Map<Long, List<User>> userIdUserListMap = this.list(userQueryWrapper)
+                .stream()
+                .map(this::getSafetyUser)
+                .collect(Collectors.groupingBy(User::getId));
+        List<User> finalUserList = new ArrayList<>();
+        for (Long userId : userIdList) {
+            finalUserList.add(userIdUserListMap.get(userId).get(0));
+        }
+        return finalUserList;
+
     }
 
     /**

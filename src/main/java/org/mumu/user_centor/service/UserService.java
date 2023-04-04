@@ -5,6 +5,7 @@ import org.mumu.user_centor.model.domain.User;
 
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ import java.util.List;
 public interface UserService extends IService<User> {
 
     long userRegister(String userAccount,String userPassword,String checkPassword);
-    User userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response);
     User getSafetyUser(User originUser);
     int logout(HttpServletRequest request);
     List<User> searchUsersByTags(List<String> tagNameList);
@@ -47,4 +48,6 @@ public interface UserService extends IService<User> {
      * @return
      */
     int updateUser(User user, User loginUser);
+
+    List<User> matchUsers(long num, User loginUser);
 }

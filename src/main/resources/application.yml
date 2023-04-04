@@ -11,7 +11,7 @@ spring:
 #      password: 123456
   session:
     timeout: 86400
-    store-type: redis
+#    store-type: redis
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
@@ -31,6 +31,9 @@ server:
     servlet:
         port: 8080
         context-path: "/api"
-        session:
-          cookie:
-            domain: localhost
+#        session:
+#          cookie:
+#            domain: 10.169.100.208
+#            same-site: none
+#            Secure: false
+

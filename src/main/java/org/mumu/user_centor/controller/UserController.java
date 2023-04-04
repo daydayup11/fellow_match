@@ -14,6 +14,7 @@ import org.mumu.user_centor.model.dto.UserQuery;
 import org.mumu.user_centor.model.request.UserLoginRequest;
 import org.mumu.user_centor.model.request.UserRegisterRequest;
 import org.mumu.user_centor.service.UserService;
+import org.mumu.user_centor.service.UserTeamService;
 import org.mumu.user_centor.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -24,17 +25,20 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://10.169.24.197:3000"},allowCredentials = "true")
+@CrossOrigin(origins = {"http://10.169.100.208:3000"})
 @Slf4j
 public class UserController {
     @Autowired
     UserService userService;
+    @Resource
+    private UserTeamService userTeamService;
 
     @Resource
     private RedisTemplate redisTemplate;
@@ -64,7 +68,7 @@ public class UserController {
      * @return 用户实体
      */
     @PostMapping("/login")
-    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request){
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request, HttpServletResponse response){
         if( userLoginRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求参数为空");
         }
@@ -73,7 +77,7 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount,userPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.userLogin(userAccount, userPassword,request);
+        User user = userService.userLogin(userAccount, userPassword,request, response);
         return ResultUtils.success(user);
     }
 
@@ -82,20 +86,25 @@ public class UserController {
      * @param username 用户名
      * @return 查询结果
      */
-    @GetMapping("/searchPage")
+    @GetMapping("/search")
     public BaseResponse<List<User>> userSearch(HttpServletRequest request,String username){
-        if(!isAdmin(request)){
-            throw new BusinessException(ErrorCode.NO_AUTH);
-        }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         if(StringUtils.isNotBlank(username)){
 //            默认模糊查询%username%
             queryWrapper.like("username",username);
         }
-        List<User> users =  userService.list(queryWrapper);
-        return ResultUtils.success(users);
+        List<User> userList = userService.list(queryWrapper);
+        List<User> result = userList.stream()
+                .map(user -> userService.getSafetyUser(user))
+                .collect(Collectors.toList());
+        return ResultUtils.success(result);
     }
 
+    /**
+     * 获得当前登录用户
+     * @param request
+     * @return
+     */
     @GetMapping("/current")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request){
         Object o = request.getSession().getAttribute(UserServiceImpl.USER_LOGIN_STATE);
@@ -118,7 +127,6 @@ public class UserController {
     public BaseResponse<Boolean> deleteUser(HttpServletRequest request,long id){
         if(isAdmin(request)){
             throw new BusinessException(ErrorCode.NO_AUTH);
-
         }
         if (id<=0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -152,6 +160,11 @@ public class UserController {
 
     }
 
+    /**
+     * 通过标签搜索用户
+     * @param tagList 选中的标签列表
+     * @return
+     */
     @GetMapping("/search/tags")
     public BaseResponse<List<User>> searchByTags(@RequestParam(required = false) List<String> tagList){
        if (CollectionUtils.isEmpty(tagList)){
@@ -170,9 +183,9 @@ public class UserController {
      */
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(HttpServletRequest request,long pageSize,long pageNum){
-//        User currentUser = userService.getCurrentUser(request);
-//        String redisKey = RedisConstant.RECOMMEND + currentUser.getId();
-        String redisKey = RedisConstant.RECOMMEND + "1635322279466274817";
+        User currentUser = userService.getCurrentUser(request);
+        String redisKey = RedisConstant.RECOMMEND + currentUser.getId();
+//        String redisKey = RedisConstant.RECOMMEND + getCurrentUser(request).getData().getId();
         ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
         //如果有缓存，直接读缓存
         //stringTemplate序列化为json得有无参构造，得自己创建page对象
@@ -191,23 +204,46 @@ public class UserController {
         return ResultUtils.success(userPage);
     }
 
-//    @PostMapping("/searchPage")
-//    public BaseResponse<Page<User>> searchUsersPage(@RequestBody UserQuery userQuery) {
-//        String searchText = userQuery.getSearchText();
-//        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-//        if (StringUtils.isNotBlank(searchText)) {
-//            queryWrapper.like("username", searchText)
-//                    .or().like("profile", searchText)
-//                    .or().like("tags", searchText);
-//        }
-//        Page<User> page = new Page<>(userQuery.getPageNum(), userQuery.getPageSize());
-//        Page<User> userListPage = userService.page(page, queryWrapper);
-//        List<User> userList = userListPage.getRecords();
-//        List<User> safetyUserList = userList.stream()
-//                .map(user -> userService.getSafetyUser(user))
-//                .collect(Collectors.toList());
-//        userListPage.setRecords(safetyUserList);
-//        return ResultUtils.success(userListPage);
-//    }
+    /**
+     * 智能匹配
+     * @param num 限制推荐人数
+     * @param request
+     * @return
+     */
+    @GetMapping("/match")
+    public BaseResponse<List<User>> matchUsers(long num, HttpServletRequest request) {
+        User loginUser = userService.getCurrentUser(request);
+        List<User> matchUsers = userService.matchUsers(num, loginUser);
+        return ResultUtils.success(matchUsers);
+    }
+
+    @PostMapping("/searchPage")
+    public BaseResponse<Page<User>> searchUsersPage(@RequestBody UserQuery userQuery) {
+        String searchText = userQuery.getSearchText();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotBlank(searchText)) {
+            queryWrapper.like("username", searchText)
+                    .or().like("profile", searchText)
+                    .or().like("tags", searchText);
+        }
+        Page<User> page = new Page<>(userQuery.getPageNum(), userQuery.getPageSize());
+        Page<User> userListPage = userService.page(page, queryWrapper);
+        List<User> userList = userListPage.getRecords();
+        List<User> safetyUserList = userList.stream()
+                .map(user -> userService.getSafetyUser(user))
+                .collect(Collectors.toList());
+        userListPage.setRecords(safetyUserList);
+        return ResultUtils.success(userListPage);
+    }
+
+    @PostMapping("/update")
+    public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request) {
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getCurrentUser(request);
+        int result = userService.updateUser(user, loginUser);
+        return ResultUtils.success(result);
+    }
 
 }

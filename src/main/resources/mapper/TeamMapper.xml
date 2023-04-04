@@ -7,12 +7,14 @@
     <resultMap id="BaseResultMap" type="org.mumu.user_centor.model.domain.Team">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="place" column="place" jdbcType="VARCHAR"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="maxNum" column="maxNum" jdbcType="INTEGER"/>
             <result property="expireTime" column="expireTime" jdbcType="TIMESTAMP"/>
             <result property="userId" column="userId" jdbcType="BIGINT"/>
             <result property="status" column="status" jdbcType="INTEGER"/>
             <result property="password" column="password" jdbcType="VARCHAR"/>
+            <result property="announce" column="announce" jdbcType="VARCHAR"/>
             <result property="tags" column="tags" jdbcType="VARCHAR"/>
             <result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
@@ -24,6 +26,6 @@
         id,name,description,
         maxNum,expireTime,userId,
         status,password,createTime,
-        updateTime,isDelete,tags,avatarUrl
+        updateTime,isDelete,tags,avatarUrl,announce,place
     </sql>
 </mapper>
