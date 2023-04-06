@@ -1,4 +1,4 @@
-package org.mumu.user_centor.service.chatService.handler;
+package org.mumu.user_centor.service.chatService.byNetty.handler;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;

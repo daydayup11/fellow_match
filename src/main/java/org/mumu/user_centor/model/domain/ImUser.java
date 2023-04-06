@@ -11,7 +11,7 @@ public class ImUser {
     /**
      * 用户id
      */
-    private Long uid;
+    private Long uid = 2L;
     /**
      * 用户昵称
      */

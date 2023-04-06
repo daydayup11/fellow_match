@@ -1,4 +1,4 @@
-package org.mumu.user_centor.service.chatService.handler;
+package org.mumu.user_centor.service.chatService.byNetty.handler;
 
 import com.google.gson.Gson;
 import io.netty.channel.Channel;
@@ -13,7 +13,7 @@ import org.mumu.user_centor.model.domain.ImUser;
 import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.service.ImService;
 import org.mumu.user_centor.service.UserService;
-import org.mumu.user_centor.service.chatService.config.NettyConfig;
+import org.mumu.user_centor.service.chatService.byNetty.config.NettyConfig;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -49,8 +49,8 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		//有新的连接加入，就加到我们的连接组里
-//		Channel channel = ctx.channel();
-//		NettyConfig.group.add(channel);
+		Channel channel = ctx.channel();
+		NettyConfig.group.add(channel);
 	}
 
 	@Override
