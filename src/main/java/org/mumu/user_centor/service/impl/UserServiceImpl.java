@@ -126,7 +126,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User safeUser = getSafetyUser(user);
         HttpSession session = request.getSession();
         session.setAttribute(USER_LOGIN_STATE,safeUser);
-//        response.addCookie(new Cookie("JSESSIONID", session.getId()));
+        response.addCookie(new Cookie("JSESSIONID", session.getId()));
         return safeUser;
     }
 

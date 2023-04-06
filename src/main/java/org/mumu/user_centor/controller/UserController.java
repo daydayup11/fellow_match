@@ -183,8 +183,9 @@ public class UserController {
      */
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(HttpServletRequest request,long pageSize,long pageNum){
-        User currentUser = userService.getCurrentUser(request);
-        String redisKey = RedisConstant.RECOMMEND + currentUser.getId();
+//        String s = request.getSession().getId();
+//        User currentUser = userService.getCurrentUser(request);
+        String redisKey = RedisConstant.RECOMMEND + 1;
 //        String redisKey = RedisConstant.RECOMMEND + getCurrentUser(request).getData().getId();
         ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
         //如果有缓存，直接读缓存
@@ -212,7 +213,8 @@ public class UserController {
      */
     @GetMapping("/match")
     public BaseResponse<List<User>> matchUsers(long num, HttpServletRequest request) {
-        User loginUser = userService.getCurrentUser(request);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         List<User> matchUsers = userService.matchUsers(num, loginUser);
         return ResultUtils.success(matchUsers);
     }
