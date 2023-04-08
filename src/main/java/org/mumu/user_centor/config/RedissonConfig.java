@@ -22,7 +22,7 @@ public class RedissonConfig {
         //1、创建配置
         Config config = new Config();
         String redisAddress = "redis://"+host+":"+port;
-        config.useSingleServer().setAddress(redisAddress).setDatabase(3);
+        config.useSingleServer().setAddress(redisAddress).setPassword(password).setDatabase(3);
         //2.创建实例
         RedissonClient redisson = Redisson.create(config);
         return redisson;

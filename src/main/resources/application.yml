@@ -16,8 +16,9 @@ spring:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
   redis:
-    host: 47.115.226.171
+    host: 192.168.159.133
     port: 6379
+    password: 123456
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -29,3 +30,5 @@ mybatis-plus:
         logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
 server:
   port: 8080
+  servlet:
+    context-path: "/api"

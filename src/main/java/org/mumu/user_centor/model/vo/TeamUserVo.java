@@ -24,6 +24,7 @@ public class TeamUserVo implements Serializable {
      * 队伍标签
      */
     private String tags;
+    private String place;
 
     /**
      * 描述

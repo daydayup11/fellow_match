@@ -24,7 +24,7 @@ public class Team implements Serializable {
      */
     private String name;
     /**
-     * 队伍名称
+     * 队伍地点
      */
     private String place;
 

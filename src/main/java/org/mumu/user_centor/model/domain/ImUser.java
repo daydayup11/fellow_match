@@ -2,16 +2,12 @@ package org.mumu.user_centor.model.domain;
 
 import lombok.Data;
 
-/**
- * @author niuma
- * @create 2023-02-10 17:21
- */
 @Data
 public class ImUser {
     /**
      * 用户id
      */
-    private Long uid = 2L;
+    private Long uid = 1L;
     /**
      * 用户昵称
      */

@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://10.169.100.208:3000"})
+@CrossOrigin(origins = {"http://10.169.100.208:3000","http://192.168.2.44:3000"},allowCredentials = "true")
 @Slf4j
 public class TeamController {
     @Resource
@@ -53,8 +53,8 @@ public class TeamController {
         if (teamAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getCurrentUser(request);
-//        User loginUser = userService.getById(2);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         Team team = new Team();
         BeanUtils.copyProperties(teamAddRequest,team);
         long teamId = teamService.addTeam(team, loginUser);
@@ -80,7 +80,8 @@ public class TeamController {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getCurrentUser(request);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         TeamUserVo teamUserVo = teamService.getTeamById(id, true,loginUser);
 
         if (teamUserVo == null) {
@@ -121,8 +122,8 @@ public class TeamController {
         if (teamJoinRequest==null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getCurrentUser(request);
-//        User loginUser = userService.getById(2);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
         return ResultUtils.success(result);
     }
@@ -132,7 +133,8 @@ public class TeamController {
         if (teamQuitRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getCurrentUser(request);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         boolean result = teamService.quitTeam(teamQuitRequest, loginUser);
         return ResultUtils.success(result);
     }
@@ -143,7 +145,8 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long id = deleteRequest.getId();
-        User loginUser = userService.getCurrentUser(request);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         boolean result = teamService.deleteTeam(id, loginUser);
         if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除失败");
@@ -163,8 +166,8 @@ public class TeamController {
         if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getCurrentUser(request);
-//        User loginUser = userService.getById(2);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         teamQuery.setUserId(loginUser.getId());
         List<TeamUserVo> teamList = teamService.listTeams(teamQuery, true);
         return ResultUtils.success(teamList);
@@ -182,8 +185,8 @@ public class TeamController {
         if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getCurrentUser(request);
-//        User loginUser = userService.getById(2);
+//        User loginUser = userService.getCurrentUser(request);
+        User loginUser = userService.getById(2);
         QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userId", loginUser.getId());
         List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
@@ -212,8 +215,8 @@ public class TeamController {
         List<Long> teamIdList = teamList.stream().map(TeamUserVo::getId).collect(Collectors.toList());
         QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
         try {
-            User loginUser = userService.getCurrentUser(request);
-//            User loginUser = userService.getById(2);
+//            User loginUser = userService.getCurrentUser(request);
+            User loginUser = userService.getById(2);
             userTeamQueryWrapper.eq("userId", loginUser.getId());
             userTeamQueryWrapper.in("teamId", teamIdList);
             //已加入队伍集合

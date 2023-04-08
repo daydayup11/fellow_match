@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://10.169.100.208:3000"})
+@CrossOrigin(origins = {"http://10.169.100.208:3000","http://192.168.2.44:3000"},allowCredentials = "true")
 @Slf4j
 public class UserController {
     @Autowired
