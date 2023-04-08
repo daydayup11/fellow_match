@@ -35,4 +35,5 @@ public interface TeamService extends IService<Team> {
      */
     TeamUserVo getTeamById(long id, boolean isAdmin,User loginUser);
 
+    List<Team> getTeamByUserId(Long userId);
 }

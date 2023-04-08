@@ -117,6 +117,15 @@ public class TeamController {
         return ResultUtils.success(teamPage);
     }
 
+    @GetMapping("/list/user")
+    public BaseResponse<List<Team>> getTeamListByUserId(Long userId){
+        if(userId == null || userId <= 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        List<Team> teamList = teamService.getTeamByUserId(userId);
+        return ResultUtils.success(teamList);
+    }
+
     @PostMapping("/join")
     public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request){
         if (teamJoinRequest==null) {

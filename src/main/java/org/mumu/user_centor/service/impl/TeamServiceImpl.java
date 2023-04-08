@@ -1,5 +1,6 @@
 package org.mumu.user_centor.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
@@ -223,6 +224,19 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             teamUserVos.add(teamUserVo);
         }
         return teamUserVos;
+    }
+
+    @Override
+    public List<Team> getTeamByUserId(Long userId) {
+        LambdaQueryWrapper<UserTeam> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(userId != null, UserTeam::getUserId, userId);
+        List<UserTeam> userTeams = userTeamService.list(queryWrapper);
+        if(userTeams.size()<=0){
+            return null;
+        }
+        List<Long> teamIdList = userTeams.stream().map(UserTeam::getTeamId).collect(Collectors.toList());
+        List<Team> teamList = this.listByIds(teamIdList);
+        return teamList;
     }
 
     @Override

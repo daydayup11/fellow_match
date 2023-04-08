@@ -13,9 +13,11 @@ import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.model.dto.UserQuery;
 import org.mumu.user_centor.model.request.UserLoginRequest;
 import org.mumu.user_centor.model.request.UserRegisterRequest;
+import org.mumu.user_centor.model.vo.UserVo;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.service.UserTeamService;
 import org.mumu.user_centor.service.impl.UserServiceImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -248,4 +250,14 @@ public class UserController {
         return ResultUtils.success(result);
     }
 
+    @PostMapping("/getUserListByIds")
+    public BaseResponse<List<UserVo>> getUserListByIds(@RequestBody UserQuery userQuery){
+        List<User> userList = userService.listByIds(userQuery.getIds());
+        List<UserVo> userVoList = userList.stream().map(user -> {
+            UserVo userVo = new UserVo();
+            BeanUtils.copyProperties(user, userVo);
+            return userVo;
+        }).collect(Collectors.toList());
+        return ResultUtils.success(userVoList);
+    }
 }
