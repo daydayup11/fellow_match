@@ -146,9 +146,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             if (id != null && id > 0) {
                 queryWrapper.eq("id", id);
             }
+            List<Long> ids = teamQuery.getIds();
+            if (!org.springframework.util.CollectionUtils.isEmpty(ids)) {
+                queryWrapper.in("id", ids);
+            }
+
             String searchText = teamQuery.getSearchText();
             if (StringUtils.isNotBlank(searchText)) {
-                queryWrapper.and(qw -> qw.like("name", searchText).or().like("description", searchText).or().like("place",searchText));
+                queryWrapper.and(qw -> qw.like("name", searchText).or().like("description", searchText).or().like("place",searchText).or().like("tags",searchText));
             }
             String name = teamQuery.getName();
             if (StringUtils.isNotBlank(name)) {

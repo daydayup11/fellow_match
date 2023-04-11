@@ -7,7 +7,7 @@ public class ImUser {
     /**
      * 用户id
      */
-    private Long uid = 1L;
+    private Long uid ;
     /**
      * 用户昵称
      */

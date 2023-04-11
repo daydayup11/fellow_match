@@ -31,7 +31,7 @@ public class PreCacheJob {
     private RedissonClient redisson;
 
     //重点用户
-    private List<Long> mainUserList = Arrays.asList(1l);
+    private List<Long> mainUserList = Arrays.asList(2l);
 
     //每天执行，预热推荐用户
     @Scheduled(cron = "0 24 18 * * *")

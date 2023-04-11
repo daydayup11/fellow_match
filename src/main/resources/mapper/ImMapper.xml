@@ -6,6 +6,7 @@
 
     <resultMap id="BaseResultMap" type="org.mumu.user_centor.model.domain.Im">
             <id property="id" column="id" jdbcType="BIGINT"/>
+            <id property="toId" column="toId" jdbcType="BIGINT"/>
             <result property="uid" column="uid" jdbcType="BIGINT"/>
             <result property="username" column="username" jdbcType="VARCHAR"/>
             <result property="avatarUrl" column="avatarUrl" jdbcType="VARCHAR"/>
@@ -16,7 +17,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,uid,username,
+        id,uid,toId,username,
         avatarUrl,profile,text,
         createTime,img
     </sql>

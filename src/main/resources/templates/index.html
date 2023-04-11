@@ -6,7 +6,8 @@
     <script type="text/javascript">
         let socket;
         if(window.WebSocket){
-            socket = new WebSocket("ws://localhost:8088/ws?id=2");
+            // socket = new WebSocket("ws://localhost:8088/ws?id=2");
+            socket = new WebSocket("ws://localhost:8080/api/im");
             socket.onmessage = function(event){
                 let textarea = document.getElementById('responseText');
                 textarea.value += event.data+"\r\n";
@@ -33,6 +34,16 @@
             }
 
         }
+        function open(){
+            if(!window.WebSocket){return;}
+            if(socket.readyState === WebSocket.OPEN) {
+                let message = document.getElementById('message').value;
+                socket.send(message);
+            } else {
+                alert("WebSocket 连接没有建立成功！");
+            }
+
+        }
 
     </script>
 </head>
@@ -41,6 +52,8 @@
     <label>文本</label><input type="text" id="message" name="message" placeholder="这里输入消息" /> <br />
     <br /> <input type="button" value="发送ws消息"
                   onClick="send()" />
+    <input type="button" value="上线"
+           onClick="onopen()" />
     <hr color="black" />
     <h3>服务端返回的应答消息</h3>
     <textarea id="responseText" style="width: 1024px;height: 300px;"></textarea>

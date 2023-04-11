@@ -12,6 +12,10 @@ public class TeamUpdateRequest implements Serializable {
      * id
      */
     private Long id;
+    /**
+     * 地区
+     */
+    private String place;
 
     /**
      * 队伍名称
@@ -43,4 +47,13 @@ public class TeamUpdateRequest implements Serializable {
      * 密码
      */
     private String password;
+
+    /**
+     * 密码
+     */
+    private String announce;
+    /**
+     * 标签
+     */
+    private String tags;
 }

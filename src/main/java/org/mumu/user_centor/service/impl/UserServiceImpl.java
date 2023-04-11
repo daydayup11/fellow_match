@@ -87,6 +87,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
+        String url = "https://img.ixintu.com/download/jpg/202001/b319c1054eb817a437fb518f92597b0a.jpg!ys";
+        user.setAvatarUrl(url);
         boolean saveResult = this.save(user);
         if(!saveResult){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"保存用户失败");
@@ -279,7 +281,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 按相似度由大到小排序
         List<Pair<User, Double>> topUserPairList = list.stream()
                 .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
-                .limit(num)
+                .limit(5)
                 .collect(Collectors.toList());
         // 原本顺序的 userId 列表
         List<Long> userIdList = topUserPairList.stream().map(pair -> pair.getKey().getId()).collect(Collectors.toList());

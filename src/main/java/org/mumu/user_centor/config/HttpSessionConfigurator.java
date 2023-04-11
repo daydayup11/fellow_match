@@ -14,6 +14,7 @@ public class HttpSessionConfigurator extends ServerEndpointConfig.Configurator {
     public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request, HandshakeResponse response) {
         //获取httpsession
         HttpSession httpSession = (HttpSession) request.getHttpSession();
+//        httpSession.setAttribute();
         if(httpSession == null){
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }

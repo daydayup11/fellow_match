@@ -8,9 +8,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import lombok.extern.slf4j.Slf4j;
+import org.mumu.user_centor.constant.ChatConstant;
 import org.mumu.user_centor.model.domain.Im;
 import org.mumu.user_centor.model.domain.ImUser;
 import org.mumu.user_centor.model.domain.User;
+import org.mumu.user_centor.model.vo.ImMessageVo;
 import org.mumu.user_centor.service.ImService;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.service.chatService.byNetty.config.NettyConfig;
@@ -19,7 +21,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.websocket.Session;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 用来解析websocket连接时的url参数
@@ -38,6 +43,9 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
 
 	private static UserService staticUserService;
 	private static ImService staticImService;
+
+	public static final Map<Long, User> userMap = new ConcurrentHashMap<>();
+	public static final Gson gson = new Gson();
 
 	// 程序初始化的时候触发这个方法  赋值
 	@PostConstruct
@@ -72,12 +80,14 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
 							User user = staticUserService.getById(uid);
 							ImUser imUser = new ImUser();
 							BeanUtils.copyProperties(user, imUser);
+							imUser.setUid(Long.parseLong(uid));
 							NettyConfig.idChannelGroup.put(imUser,ctx.channel());
 							NettyConfig.channelIdGroup.put(ctx.channel(), imUser);
 						}
 					}
 					//将uri设置回来，否则下一个handler通过不了就建立不了连接
 					request.setUri("/ws");
+
 				}
 			}
 		}

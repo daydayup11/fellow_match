@@ -13,6 +13,10 @@ public class TeamAddRequest {
      * 队伍名称
      */
     private String name;
+    /**
+     * 公告
+     */
+    private String announce;
 
     /**
      * 描述
@@ -29,6 +33,7 @@ public class TeamAddRequest {
      */
     private Date expireTime;
 
+
     /**
      * 用户id
      */
@@ -43,4 +48,13 @@ public class TeamAddRequest {
      * 密码
      */
     private String password;
+
+    /**
+     * 地点
+     */
+    private String place;
+    /**
+     * 标签
+     */
+    private String tags;
 }

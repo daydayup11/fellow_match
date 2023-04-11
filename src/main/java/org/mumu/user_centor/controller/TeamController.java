@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/team")
-@CrossOrigin(origins = {"http://10.169.100.208:3000","http://192.168.2.44:3000"},allowCredentials = "true")
+@CrossOrigin(origins = {"http://10.174.224.237:3000","http://192.168.233.51:3000"},allowCredentials = "true")
 @Slf4j
 public class TeamController {
     @Resource
@@ -43,7 +43,7 @@ public class TeamController {
     private UserTeamService userTeamService;
 
     /**
-     * 加入队伍
+     * 创建队伍
      * @param teamAddRequest
      * @param request
      * @return
@@ -202,7 +202,6 @@ public class TeamController {
         //按teamId分组，返回Map，Map的key就是去重后的teamId
         Map<Long, List<UserTeam>> listMap = userTeamList.stream()
                 .collect(Collectors.groupingBy(UserTeam::getTeamId));
-
         ArrayList<Long> ids = new ArrayList<>(listMap.keySet());
         teamQuery.setIds(ids);
         List<TeamUserVo> teamList = new ArrayList<>();
