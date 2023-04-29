@@ -1,33 +1,47 @@
 package org.mumu.user_centor.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import javafx.util.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.mumu.user_centor.common.BaseResponse;
 import org.mumu.user_centor.common.ErrorCode;
+import org.mumu.user_centor.common.ResultUtils;
 import org.mumu.user_centor.constant.UserConstant;
 import org.mumu.user_centor.exception.BusinessException;
 import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.mapper.UserMapper;
+import org.mumu.user_centor.model.vo.UserVo;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.utils.JaccardSimilarity;
+import org.mumu.user_centor.utils.UserHolder;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.redis.connection.RedisGeoCommands;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.domain.geo.GeoReference;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
-
 import javax.annotation.Resource;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.mumu.user_centor.constant.RedisConstant.*;
 import static org.mumu.user_centor.constant.UserConstant.ADMIN_ROLE;
 
 /**
@@ -42,6 +56,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public static final String USER_LOGIN_STATE = "userLoginState";
     @Resource
     UserMapper userMapper;
+    @Resource
+    StringRedisTemplate stringRedisTemplate;
     /**
      * 进行用户注册
      * @param userAccount 账号
@@ -97,7 +113,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response) {
+    public String userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response) {
         //校验是否为空
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码为空");
@@ -126,10 +142,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码错误");
         }
         User safeUser = getSafetyUser(user);
-        HttpSession session = request.getSession();
-        session.setAttribute(USER_LOGIN_STATE,safeUser);
-        response.addCookie(new Cookie("JSESSIONID", session.getId()));
-        return safeUser;
+        //将用户保存到redis
+        String token = UUID.randomUUID().toString();
+        Map<String ,Object> userMap = BeanUtil.beanToMap(
+                safeUser,new HashMap<>(),
+                CopyOptions.create().setIgnoreNullValue(true)
+                        //解决方法：在setFieldValueEditor中也需要判空
+                .setFieldValueEditor((fieldName,fieldValue) -> {
+                    if (fieldValue == null){
+                        fieldValue = " ";
+                    }else {
+                        fieldValue = fieldValue.toString();
+                    }
+                    return fieldValue;}));
+//                    setFieldValueEditor((fieldName, fieldValue)->fieldValue.toString()));
+        //存储
+        String tokenKey = LOGIN_USER_KEY + token;
+        stringRedisTemplate.opsForHash().putAll(tokenKey,userMap);
+        //设置token有效期
+        stringRedisTemplate.expire(tokenKey,LOGIN_USER_TTL, TimeUnit.MINUTES);
+        //8.返回token
+        return token;
     }
 
     @Override
@@ -156,8 +189,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public int logout(HttpServletRequest request) {
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
-        return 1;
+        String token = request.getHeader("authorization");
+        String key = LOGIN_USER_KEY + token;
+        Long delete = stringRedisTemplate.opsForHash().delete(key);
+        return Integer.parseInt(delete.toString());
     }
 
     /**
@@ -212,9 +247,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (request == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        HttpSession session = request.getSession();
-
-        User user = (User) session.getAttribute(USER_LOGIN_STATE);
+        User user = UserHolder.getUser();
         if (user == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
@@ -267,7 +300,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             User user = userList.get(i);
             String userTags = user.getTags();
             // 无标签或者为当前用户自己
-//            System.out.println(user.getId().equals(loginUser.getId()));
             if (StringUtils.isBlank(userTags) || user.getId().equals(loginUser.getId())) {
                 continue;
             }
@@ -300,6 +332,56 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return finalUserList;
 
+    }
+
+    @Override
+    public BaseResponse<Page<User>> searchUserByDistance(Integer pageSize, Integer pageNum, Double x, Double y) {
+        //1.判断是否需求根据坐标查询
+        if(x == null||y == null){
+            Page<User> page = query().page(new Page<>(pageNum,pageSize));
+            return ResultUtils.success(page);
+
+        }
+        //2.计算分页参数
+        int from = (pageNum - 1) * pageSize;
+        int end = pageNum * pageSize;
+        //3.查询redis，按照距离排序、分页。结果:shopId、distance
+        // GEOSEARCH key BYLONLAT x y BYRADIUS 10 WITHDISTANCE
+        String key = USER_GEO_KEY;
+        GeoResults<RedisGeoCommands.GeoLocation<String>> results = stringRedisTemplate.opsForGeo().search(key, GeoReference.fromCoordinate(x, y),
+                new Distance(10000),
+                RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end));
+        //4.解析出id
+        if(results == null){
+            return ResultUtils.success((Collections.emptyList()));
+        }
+        //截取从from到end的数据，redis查出0-end
+        List<GeoResult<RedisGeoCommands.GeoLocation<String>>> list = results.getContent();
+        if (list.size() <= from) {
+            // 没有下一页了，结束
+            return ResultUtils.success((Collections.emptyList()));
+        }
+        //获得用户id
+        Map<String ,Distance> distanceMap = new HashMap<>(list.size());
+        ArrayList<Long> ids = new ArrayList<>(list.size());
+        list.stream().skip(from).forEach(result ->{
+            //获取用户id
+            String userId = result.getContent().getName();
+            ids.add(Long.valueOf(userId));
+            //获取距离
+            Distance distance = result.getDistance();
+            distanceMap.put(userId,distance);
+        });
+        //5.根据id查询user
+        String idStr = StrUtil.join(",", ids);
+        List<User> users = query().in("id", ids).last("order by field(id," + idStr + ")").list();
+        List<UserVo> userVoList = new ArrayList<>();
+        for (User user : users) {
+            UserVo userVo = BeanUtil.copyProperties(user, UserVo.class);
+            userVo.setDistance(distanceMap.get(user.getId().toString()).getValue());
+            userVoList.add(userVo);
+        }
+        return ResultUtils.success(userVoList);
     }
 
     /**

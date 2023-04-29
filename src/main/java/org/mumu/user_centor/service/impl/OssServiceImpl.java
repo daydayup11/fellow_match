@@ -7,7 +7,6 @@ import org.mumu.user_centor.service.OssService;
 import org.mumu.user_centor.utils.ConstantPropertiesUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
@@ -50,7 +49,6 @@ public class OssServiceImpl implements OssService {
             //需要把上传到阿里云oss路径手动拼接出来
             //https://achang-edu.oss-cn-hangzhou.aliyuncs.com/default.gif
             String url = "http://" + bucketName + "." + endpoint + "/" + fileName;
-
             return url;
         } catch (IOException e) {
             e.printStackTrace();

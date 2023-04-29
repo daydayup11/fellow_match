@@ -12,6 +12,7 @@ import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.model.vo.ImMessageVo;
 import org.mumu.user_centor.service.ImService;
 import org.mumu.user_centor.service.UserService;
+import org.mumu.user_centor.utils.UserHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,6 @@ import javax.websocket.server.ServerEndpoint;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-//@ServerEndpoint(value = "/api/im", configurator = HttpSessionConfigurator.class)
 @ServerEndpoint(value = "/im")
 @Component
 public class ChatWebSocketServer {
@@ -37,11 +37,6 @@ public class ChatWebSocketServer {
      */
     public static final Map<Long, Session> sessionMap = new ConcurrentHashMap<>();
     public static final Gson gson = new Gson();
-    private Session session;
-    private static long id = 2;
-//    private User user;
-
-    HttpSession httpSession;
 
     @Resource
     ImService imService;
@@ -63,16 +58,11 @@ public class ChatWebSocketServer {
      */
     @OnOpen
     public void onOpen(Session session, EndpointConfig config) {
-        HttpSession httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
-        this.httpSession = httpSession;
-        this.session = session;
-//        User loginUser = (User) httpSession.getAttribute(UserConstant.USER_LOGIN_STATE);
-        User loginUser = staticUserService.getById(id--);
+        User loginUser = UserHolder.getUser();
         if(loginUser == null){
             return;
         }
         sessionMap.put(loginUser.getId(), session);
-//        sessionMap.put(1L,session);
         log.info("有新用户加入，uid={}, 当前在线人数为：{}", loginUser.getId(), sessionMap.size());
         Im im = new Im();
         im.setText(gson.toJson(sessionMap.keySet()));
@@ -87,8 +77,7 @@ public class ChatWebSocketServer {
      */
     @OnClose
     public void onClose(Session session) {
-//        User loginUser = (User) httpSession.getAttribute(UserConstant.USER_LOGIN_STATE);
-        User loginUser = userService.getById(2);
+        User loginUser = UserHolder.getUser();
         sessionMap.remove(loginUser.getId());
         log.info("有一连接关闭，uid={}的用户session, 当前在线人数为：{}", loginUser.getId(), sessionMap.size());
         Im im = new Im();

@@ -50,6 +50,10 @@ public class User implements Serializable {
      */
     private String userPassword;
 
+    private Double x;
+
+    private Double y;
+
     /**
      * 
      */

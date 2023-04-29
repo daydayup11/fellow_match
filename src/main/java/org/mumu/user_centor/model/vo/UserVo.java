@@ -37,10 +37,10 @@ public class UserVo implements Serializable {
      */
     private Integer gender;
 
-    /**
-     * 电话
-     */
-    private String phone;
+//    /**
+//     * 电话
+//     */
+//    private String phone;
 
     /**
      * 邮箱
@@ -71,6 +71,10 @@ public class UserVo implements Serializable {
      * 用户角色 0 - 普通用户 1 - 管理员
      */
     private Integer userRole;
+
+    private Double distance;
+    private double x;
+    private double y;
 
     /**
      * 联系方式

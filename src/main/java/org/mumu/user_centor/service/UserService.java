@@ -1,6 +1,8 @@
 package org.mumu.user_centor.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.mumu.user_centor.common.BaseResponse;
 import org.mumu.user_centor.model.domain.User;
 
 
@@ -16,7 +18,7 @@ import java.util.List;
 public interface UserService extends IService<User> {
 
     long userRegister(String userAccount,String userPassword,String checkPassword);
-    User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response);
+    String userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response);
     User getSafetyUser(User originUser);
     int logout(HttpServletRequest request);
     List<User> searchUsersByTags(List<String> tagNameList);
@@ -50,4 +52,6 @@ public interface UserService extends IService<User> {
     int updateUser(User user, User loginUser);
 
     List<User> matchUsers(long num, User loginUser);
+
+    BaseResponse<Page<User>> searchUserByDistance(Integer pageSize, Integer pageNum, Double x, Double y);
 }

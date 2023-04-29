@@ -17,6 +17,7 @@ import org.mumu.user_centor.model.vo.UserVo;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.service.UserTeamService;
 import org.mumu.user_centor.service.impl.UserServiceImpl;
+import org.mumu.user_centor.utils.UserHolder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -79,8 +80,8 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount,userPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.userLogin(userAccount, userPassword,request, response);
-        return ResultUtils.success(user);
+        String token = userService.userLogin(userAccount, userPassword,request, response);
+        return ResultUtils.success(token);
     }
 
     /**
@@ -109,13 +110,11 @@ public class UserController {
      */
     @GetMapping("/current")
     public BaseResponse<User> getCurrentUser(HttpServletRequest request){
-        Object o = request.getSession().getAttribute(UserServiceImpl.USER_LOGIN_STATE);
-        User user = (User) o;
+        User user = UserHolder.getUser();
         if(user == null){
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         //查询数据库更新用户信息，如果是一个用户信息经常变动的系统
-        user = userService.getById(user.getId());
         User safetyUser = userService.getSafetyUser(user);
         return ResultUtils.success(safetyUser);
     }
@@ -132,9 +131,11 @@ public class UserController {
         }
         if (id<=0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
-
         }
         Boolean b = userService.removeById(id);
+        if (b == false){
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
         return ResultUtils.success(b);
 
     }
@@ -143,7 +144,6 @@ public class UserController {
     public BaseResponse<Integer> logout(HttpServletRequest request){
         if(request == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
-
         }
         return ResultUtils.success(userService.logout(request));
     }
@@ -185,10 +185,8 @@ public class UserController {
      */
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(HttpServletRequest request,long pageSize,long pageNum){
-//        String s = request.getSession().getId();
-//        User currentUser = userService.getCurrentUser(request);
-        String redisKey = RedisConstant.RECOMMEND + 1;
-//        String redisKey = RedisConstant.RECOMMEND + getCurrentUser(request).getData().getId();
+        Long id = UserHolder.getUser().getId();
+        String redisKey = RedisConstant.RECOMMEND + id;
         ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
         //如果有缓存，直接读缓存
         //stringTemplate序列化为json得有无参构造，得自己创建page对象
@@ -215,8 +213,7 @@ public class UserController {
      */
     @GetMapping("/match")
     public BaseResponse<List<User>> matchUsers(long num, HttpServletRequest request) {
-//        User loginUser = userService.getCurrentUser(request);
-        User loginUser = userService.getById(2);
+        User loginUser = UserHolder.getUser();
         List<User> matchUsers = userService.matchUsers(num, loginUser);
         return ResultUtils.success(matchUsers);
     }
@@ -259,5 +256,15 @@ public class UserController {
             return userVo;
         }).collect(Collectors.toList());
         return ResultUtils.success(userVoList);
+    }
+
+    @GetMapping("/near")
+    public BaseResponse<Page<User>> searchUserByDistance(
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "x", required = false) Double x,
+            @RequestParam(value = "y", required = false) Double y
+    ) {
+        return userService.searchUserByDistance(pageSize, pageNum, x, y);
     }
 }

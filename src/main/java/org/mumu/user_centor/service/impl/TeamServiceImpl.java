@@ -499,6 +499,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         return team;
     }
+
     @Override
     public TeamUserVo getTeamById(long id, boolean isAdmin,User loginUser) {
         if (id <= 0) {

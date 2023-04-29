@@ -18,6 +18,7 @@ import org.mumu.user_centor.model.vo.TeamUserVo;
 import org.mumu.user_centor.service.TeamService;
 import org.mumu.user_centor.service.UserService;
 import org.mumu.user_centor.service.UserTeamService;
+import org.mumu.user_centor.utils.UserHolder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -154,8 +155,7 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long id = deleteRequest.getId();
-//        User loginUser = userService.getCurrentUser(request);
-        User loginUser = userService.getById(2);
+        User loginUser = UserHolder.getUser();
         boolean result = teamService.deleteTeam(id, loginUser);
         if (!result) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "删除失败");
