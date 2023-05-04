@@ -3,6 +3,7 @@ package org.mumu.user_centor.service;
 import org.mumu.user_centor.common.BaseResponse;
 import org.mumu.user_centor.model.domain.Follow;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.model.vo.UserVo;
 
 import java.util.List;
@@ -19,4 +20,6 @@ public interface FollowService extends IService<Follow> {
     BaseResponse<Boolean> isFollow(Long followUserId);
 
     BaseResponse<List<UserVo>> followCommons(Long id);
+
+    BaseResponse<List<User>> searchMyFollow();
 }

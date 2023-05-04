@@ -54,7 +54,6 @@ public class TeamController {
         if (teamAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-//        User loginUser = userService.getCurrentUser(request);
         User loginUser = userService.getById(2);
         Team team = new Team();
         BeanUtils.copyProperties(teamAddRequest,team);

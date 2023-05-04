@@ -50,9 +50,9 @@ public class User implements Serializable {
      */
     private String userPassword;
 
-    private Double x;
+    private double x;
 
-    private Double y;
+    private double y;
 
     /**
      * 
@@ -89,6 +89,8 @@ public class User implements Serializable {
      * 0-普通用户，1-管理员
      */
     private Integer userRole;
+    @TableField(exist = false)
+    private String token;
 
     /**
      * 

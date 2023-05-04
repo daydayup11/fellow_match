@@ -1,6 +1,7 @@
 package org.mumu.user_centor.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.mumu.user_centor.common.BaseResponse;
@@ -66,7 +67,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow>
         } else {
             // 3.取关，删除 delete from tb_follow where user_id = ? and follow_user_id = ?
             boolean isSuccess = remove(new QueryWrapper<Follow>()
-                    .eq("useId", userId).eq("followUserId", followUserId));
+                    .eq("userId", userId).eq("followUserId", followUserId));
             if (isSuccess) {
                 // 把关注用户的id从Redis集合中移除
                 stringRedisTemplate.opsForSet().remove(key, followUserId.toString());
@@ -118,6 +119,24 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow>
             userVos.add(BeanUtil.copyProperties(safetyUser,UserVo.class));
         }
         return ResultUtils.success(userVos);
+    }
+
+    @Override
+    public BaseResponse<List<User>> searchMyFollow() {
+        User user = UserHolder.getUser();
+        if (user == null){
+            ResultUtils.error(ErrorCode.NOT_LOGIN);
+        }
+        List<Follow> follows = query().eq("userId", user.getId()).list();
+        //5.根据id查询user
+        List<Long> ids = new ArrayList<>();
+        for (Follow follow : follows) {
+            Long followUserId = follow.getFollowUserId();
+            ids.add(followUserId);
+        }
+        String idStr = StrUtil.join(",", ids);
+        List<User> users = userService.query().in("id", idStr).list();
+        return ResultUtils.success(users);
     }
 }
 

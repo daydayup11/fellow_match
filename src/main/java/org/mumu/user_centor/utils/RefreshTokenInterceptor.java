@@ -26,10 +26,15 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         //1.获取请求头中的token
-        String token = request.getHeader("authorization");
-        if(StrUtil.isBlank(token)){
-            //不存在放行
+//        String token = request.getHeader("authorization");
+        String token = "";
+        // 如果是 OPTIONS 请求，我们就让他通过，不管他
+        if (request.getMethod().equals("OPTIONS")) {
+            response.setStatus(HttpServletResponse.SC_OK);
             return true;
+            // 如果不是，我们就把token拿到，用来做判断
+        }else {
+            token = request.getHeader("authorization");
         }
         //2.基于token获取redis中的用户
         String key = LOGIN_USER_KEY + token;

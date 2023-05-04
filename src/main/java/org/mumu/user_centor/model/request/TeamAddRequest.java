@@ -2,10 +2,11 @@ package org.mumu.user_centor.model.request;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 
 @Data
-public class TeamAddRequest {
+public class TeamAddRequest implements Serializable {
 
     private static final long serialVersionUID = -4162304142710323660L;
 
@@ -32,6 +33,10 @@ public class TeamAddRequest {
      * 过期时间
      */
     private Date expireTime;
+    /**
+     * 队伍头像
+     */
+    private String avatarUrl;
 
 
     /**

@@ -113,7 +113,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public String userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response) {
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response) {
         //校验是否为空
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号或密码为空");
@@ -155,14 +155,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                         fieldValue = fieldValue.toString();
                     }
                     return fieldValue;}));
-//                    setFieldValueEditor((fieldName, fieldValue)->fieldValue.toString()));
         //存储
         String tokenKey = LOGIN_USER_KEY + token;
         stringRedisTemplate.opsForHash().putAll(tokenKey,userMap);
         //设置token有效期
         stringRedisTemplate.expire(tokenKey,LOGIN_USER_TTL, TimeUnit.MINUTES);
+        safeUser.setToken(token);
         //8.返回token
-        return token;
+        return safeUser;
     }
 
     @Override
@@ -335,7 +335,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public BaseResponse<Page<User>> searchUserByDistance(Integer pageSize, Integer pageNum, Double x, Double y) {
+    public BaseResponse<Page<UserVo>> searchUserByDistance(Integer pageSize, Integer pageNum, Double x, Double y) {
         //1.判断是否需求根据坐标查询
         if(x == null||y == null){
             Page<User> page = query().page(new Page<>(pageNum,pageSize));
@@ -375,14 +375,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //5.根据id查询user
         String idStr = StrUtil.join(",", ids);
         List<User> users = query().in("id", ids).last("order by field(id," + idStr + ")").list();
-        List<UserVo> userVoList = new ArrayList<>();
+        List<UserVo> userVoList = new ArrayList<>(users.size());
         for (User user : users) {
             UserVo userVo = BeanUtil.copyProperties(user, UserVo.class);
-            userVo.setDistance(distanceMap.get(user.getId().toString()).getValue());
+            double value = distanceMap.get(user.getId().toString()).getValue();
+            value = value/1000.0;
+            String  str = String.format("%.2f",value);
+            value = Double.parseDouble(str);
+            userVo.setDistance(value);
             userVoList.add(userVo);
         }
         return ResultUtils.success(userVoList);
     }
+
 
     /**
      * 标签查询sql版

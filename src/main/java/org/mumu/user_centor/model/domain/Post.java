@@ -37,7 +37,7 @@ public class Post implements Serializable {
     /**
      * 照片，最多9张，多张以","隔开
      */
-    private String images;
+    private String avatarUrl;
 
     /**
      * 文字描述

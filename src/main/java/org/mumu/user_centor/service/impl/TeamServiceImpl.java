@@ -205,11 +205,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 Long userId = userTeam.getUserId();
                 User user = userService.getById(userId);
                 User safetyUser = userService.getSafetyUser(user);
-                UserVo UserVo = new UserVo();
+                UserVo userVo = new UserVo();
                 if (safetyUser != null) {
-                    BeanUtils.copyProperties(safetyUser, UserVo);
+                    BeanUtils.copyProperties(safetyUser, userVo);
                 }
-                return UserVo;
+                return userVo;
             }).filter(userVo -> org.apache.commons.lang3.StringUtils.isNotEmpty(userVo.getUserAccount())).collect(Collectors.toList());
 
             // 创建返回对象

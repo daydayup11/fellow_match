@@ -7,7 +7,7 @@
         let socket;
         if(window.WebSocket){
             // socket = new WebSocket("ws://localhost:8088/ws?id=2");
-            socket = new WebSocket("ws://localhost:8080/api/im");
+            socket = new WebSocket("ws://localhost:8080/api/im?id=2");
             socket.onmessage = function(event){
                 let textarea = document.getElementById('responseText');
                 textarea.value += event.data+"\r\n";

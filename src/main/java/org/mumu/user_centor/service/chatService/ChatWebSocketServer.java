@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mumu.user_centor.config.HttpSessionConfigurator;
 import org.mumu.user_centor.constant.ChatConstant;
 import org.mumu.user_centor.constant.UserConstant;
+import org.mumu.user_centor.controller.UserController;
 import org.mumu.user_centor.model.domain.Im;
 import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.model.vo.ImMessageVo;
@@ -16,13 +17,18 @@ import org.mumu.user_centor.utils.UserHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 import javax.websocket.*;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,6 +36,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ChatWebSocketServer {
 
+    private static ApplicationContext applicationContext;
+//    public static void setApplicationContext(ApplicationContext context){
+//        applicationContext = context;
+//    }
     private static final Logger log = LoggerFactory.getLogger(ChatWebSocketServer.class);
     /**
      * 记录当前在线连接数
@@ -46,7 +56,7 @@ public class ChatWebSocketServer {
     private static ImService staticImService;
     private static UserService staticUserService;
 
-    // 程序初始化的时候触发这个方法  赋值
+    // 程序初始化的时候触发这个方法 赋值
     @PostConstruct
     public void setStaticUser() {
         staticImService = imService;

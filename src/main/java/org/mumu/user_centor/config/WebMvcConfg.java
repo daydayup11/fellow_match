@@ -21,7 +21,7 @@ public class WebMvcConfg implements WebMvcConfigurer {
         registry.addMapping("/**")
                 //设置允许跨域请求的域名
                 //当**Credentials为true时，**Origin不能为星号，需为具体的ip地址【如果接口不带cookie,ip无需设成具体ip】
-                .allowedOrigins("http://10.169.100.208:3000", "http://10.174.224.237:3000", "http://127.0.0.1:8080")
+                .allowedOrigins("http://10.169.121.113:3000", "http://10.174.224.237:3000", "http://127.0.0.1:8080")
                 //是否允许证书 不再默认开启
                 .allowCredentials(true)
                 //设置允许的方法
@@ -38,6 +38,7 @@ public class WebMvcConfg implements WebMvcConfigurer {
                 "/post/hot",
                 "/user/register",
                 "/user/login",
+                "/team/list",
                 "/doc.html",
                 "/webjars/**",
                 "/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**",

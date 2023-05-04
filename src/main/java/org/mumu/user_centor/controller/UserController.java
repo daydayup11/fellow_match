@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -80,8 +81,9 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount,userPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        String token = userService.userLogin(userAccount, userPassword,request, response);
-        return ResultUtils.success(token);
+        User user = userService.userLogin(userAccount, userPassword,request, response);
+
+        return ResultUtils.success(user);
     }
 
     /**
@@ -185,8 +187,7 @@ public class UserController {
      */
     @GetMapping("/recommend")
     public BaseResponse<Page<User>> recommendUsers(HttpServletRequest request,long pageSize,long pageNum){
-        Long id = UserHolder.getUser().getId();
-        String redisKey = RedisConstant.RECOMMEND + id;
+        String redisKey = RedisConstant.RECOMMEND + 2;
         ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
         //如果有缓存，直接读缓存
         //stringTemplate序列化为json得有无参构造，得自己创建page对象
@@ -251,7 +252,7 @@ public class UserController {
     public BaseResponse<List<UserVo>> getUserListByIds(@RequestBody UserQuery userQuery){
         List<User> userList = userService.listByIds(userQuery.getIds());
         List<UserVo> userVoList = userList.stream().map(user -> {
-            UserVo userVo = new UserVo();
+            UserVo  userVo = new UserVo();
             BeanUtils.copyProperties(user, userVo);
             return userVo;
         }).collect(Collectors.toList());
@@ -259,12 +260,15 @@ public class UserController {
     }
 
     @GetMapping("/near")
-    public BaseResponse<Page<User>> searchUserByDistance(
+    public BaseResponse<Page<UserVo>> searchUserByDistance(
             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
             @RequestParam(value = "x", required = false) Double x,
             @RequestParam(value = "y", required = false) Double y
     ) {
+
         return userService.searchUserByDistance(pageSize, pageNum, x, y);
     }
+
+
 }

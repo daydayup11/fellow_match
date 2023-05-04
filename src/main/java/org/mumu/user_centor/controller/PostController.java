@@ -1,21 +1,25 @@
 package org.mumu.user_centor.controller;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.mumu.user_centor.common.BaseResponse;
 import org.mumu.user_centor.common.ErrorCode;
 import org.mumu.user_centor.common.ResultUtils;
 import org.mumu.user_centor.exception.BusinessException;
 import org.mumu.user_centor.model.domain.Post;
+import org.mumu.user_centor.model.domain.Team;
 import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.model.dto.UserDTO;
 import org.mumu.user_centor.model.request.DeleteRequest;
 import org.mumu.user_centor.model.request.ObjectIdRequest;
+import org.mumu.user_centor.model.request.PostAddRequest;
 import org.mumu.user_centor.model.request.PostCommentAddRequest;
 import org.mumu.user_centor.model.vo.PostVo;
 import org.mumu.user_centor.model.vo.ScrollResult;
 import org.mumu.user_centor.service.PostCommentService;
 import org.mumu.user_centor.service.PostService;
 import org.mumu.user_centor.utils.UserHolder;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -33,7 +37,7 @@ public class PostController {
 
     /**
      * 上传帖子
-     * @param post
+     * @param postAddRequest
      * @return
      */
     @PostMapping("/add")
@@ -61,7 +65,7 @@ public class PostController {
      * @return
      */
     @GetMapping("/of/user")
-    public BaseResponse<List<Post>> queryBlogByUserId(
+    public BaseResponse<List<Post>> queryPostByUserId(
             @RequestParam(value = "current", defaultValue = "1") Integer current,
             @RequestParam("id") Long id) {
         // 根据用户查询
@@ -77,8 +81,8 @@ public class PostController {
      * @param id 帖子id
      * @return
      */
-    @PutMapping("/like/{id}")
-    public BaseResponse<Boolean> likeBlog(@PathVariable("id") Long id) {
+    @GetMapping("/like")
+    public BaseResponse<Boolean> likePost(Long id) {
         return postService.likePost(id);
     }
 
@@ -88,7 +92,7 @@ public class PostController {
      * @return
      */
     @GetMapping("/of/me")
-    public BaseResponse<List<Post>> queryMyBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
+    public BaseResponse<List<Post>> queryMyPost(@RequestParam(value = "current", defaultValue = "1") Integer current) {
         // 获取登录用户
         User user = UserHolder.getUser();
         // 根据用户查询
@@ -114,8 +118,8 @@ public class PostController {
      * @param id
      * @return
      */
-    @GetMapping("/{id}")
-    public BaseResponse<PostVo> queryBlogById(@PathVariable("id") Long id){
+    @GetMapping("/search")
+    public BaseResponse<PostVo> queryPostById(Long id){
         return postService.queryPostById(id);
     }
 
@@ -124,8 +128,8 @@ public class PostController {
      * @param id
      * @return
      */
-    @GetMapping("/likes/{id}")
-    public BaseResponse<List<UserDTO>> queryBlogLikes(@PathVariable("id") Long id) {
+    @GetMapping("/likes")
+    public BaseResponse<List<UserDTO>> queryPostLikes(Long id) {
         return postService.queryPostLikes(id);
     }
 
@@ -136,7 +140,7 @@ public class PostController {
      * @return
      */
     @GetMapping("/of/follow")
-    public BaseResponse<ScrollResult> queryBlogOfFollow(
+    public BaseResponse<ScrollResult> queryPostOfFollow(
             @RequestParam("lastId") Long max, @RequestParam(value = "offset", defaultValue = "0") Integer offset){
         return postService.queryPostOfFollow(max, offset);
     }

@@ -1,5 +1,6 @@
 package org.mumu.user_centor.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.mumu.user_centor.common.BaseResponse;
 import org.mumu.user_centor.model.domain.User;
 import org.mumu.user_centor.model.vo.UserVo;
@@ -15,14 +16,14 @@ public class FollowController {
     @Resource
     private FollowService followService;
     //关注
-    @PutMapping("/{id}/{isFollow}")
-    public BaseResponse<Boolean> follow(@PathVariable("id") Long followUserId, @PathVariable("isFollow") Boolean isFollow) {
-        return followService.follow(followUserId, isFollow);
+    @GetMapping
+    public BaseResponse<Boolean> follow( @RequestParam("id") Long id,@RequestParam("isFollow") Boolean isFollow) {
+        return followService.follow(id, isFollow);
     }
     //是否关注
-    @GetMapping("/or/not/{id}")
-    public BaseResponse<Boolean> isFollow(@PathVariable("id") Long followUserId) {
-        return followService.isFollow(followUserId);
+    @GetMapping("/or/not")
+    public BaseResponse<Boolean> isFollow(Long id) {
+        return followService.isFollow(id);
     }
 
     /**
@@ -30,8 +31,17 @@ public class FollowController {
      * @param id 对象用户id
      * @return
      */
-    @GetMapping("/common/{id}")
-    public BaseResponse<List<UserVo>> followCommons(@PathVariable("id") Long id){
+    @GetMapping("/common")
+    public BaseResponse<List<UserVo>> followCommons(Long id){
         return followService.followCommons(id);
+    }
+
+    /**
+     *
+     * @return
+     */
+    @GetMapping("/myFollow")
+    public BaseResponse<List<User>> searchMyFollow(){
+        return followService.searchMyFollow();
     }
 }
