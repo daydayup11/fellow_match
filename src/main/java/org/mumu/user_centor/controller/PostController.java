@@ -41,7 +41,26 @@ public class PostController {
      * @return
      */
     @PostMapping("/add")
-    public BaseResponse<Long> savePost(@RequestBody Post post){
+    public BaseResponse<Long> savePost(@RequestBody PostAddRequest postAddRequest){
+        if (postAddRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = UserHolder.getUser();
+        Post post = new Post();
+        BeanUtils.copyProperties(postAddRequest,post);
+        post.setIsLike(false);
+        post.setUserId(loginUser.getId());
+        String avatarUrl = post.getAvatarUrl();
+        avatarUrl = avatarUrl.substring(1,avatarUrl.length()-1);
+        String[] avatarUrls = avatarUrl.split(",");
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String url : avatarUrls) {
+            String substring = url.substring(1, url.length() - 1);
+            stringBuilder.append(substring);
+            stringBuilder.append(",");
+        }
+        String images = stringBuilder.substring(0, stringBuilder.length() - 1).toString();
+        post.setAvatarUrl(images);
         return postService.savePost(post);
     }
 
