@@ -17,7 +17,15 @@
 3. 修改application.yml里的mysql、redis、oss地址为自己的
 4. 启动Application
 
-访问 http://127.0.0.1:8080/api/doc.html 查看接口文档
+## 笔记
+查看 伙伴匹配.md
+
+## 线上接口文档地址
+
+http://111.229.199.247:8080/api/doc.html
+
+本地：访问 http://127.0.0.1:8080/api/doc.html 查看接口文档
+
 ![输入图片说明](img.png)
 
 ![输入图片说明](%E4%B8%AA%E4%BA%BA%E9%A1%B5%E9%9D%A2.png)
