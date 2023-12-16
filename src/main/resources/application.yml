@@ -5,9 +5,9 @@ spring:
         name: UserCentorApplication #user-centor
   datasource:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://127.0.0.1:3306/universe
+      url: jdbc:mysql://127.0.0.1:3306/fellowmatch
       username: root
-      password: dyt15918781398
+      password: xxx
 #      url: jdbc:mysql://47.115.226.171:3306/universe
 #      username: root
 #      password: 123456
@@ -20,9 +20,9 @@ spring:
 #    password: 123456
 #    database: 1
   redis:
-    host: 192.168.159.135
+    host: 111.229.199.247
     port: 6379
-    password: 123456
+    password: xxx
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false

@@ -1,6 +1,5 @@
 package org.mumu.user_centor.utils;
 
-import javafx.util.Pair;
 import org.mumu.user_centor.model.domain.User;
 
 import java.util.ArrayList;
