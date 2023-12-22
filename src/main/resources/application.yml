@@ -40,6 +40,6 @@ aliyun:
   oss:
     file:
       endpoint: oss-cn-hangzhou.aliyuncs.com
-      keyid: LTAI5tNqUm5rChqoYNofKJxz
-      keysecret: ImCIOb4OsUvtIZiy7cTzYRrDeoK6UI
+      keyid: xxx
+      keysecret: xxx
       bucketname: matchplay
